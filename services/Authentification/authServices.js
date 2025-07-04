@@ -1,5 +1,5 @@
-const bcrypt = require('bcrypt');
-const { BadRequestError, UnauthorizedError } = require('../utils/errors');
+const bcrypt = require('bcryptjs');
+const { BadRequestError, UnauthorizedError } = require('../../utils/errors');
 
 const users = [];
 
