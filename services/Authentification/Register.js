@@ -7,19 +7,20 @@ import { USERS, DATA_BASE } from '../Communication_Bdd.js';
 const router = express.Router();
 const JWT_SECRET = 'mon_secret_jwt';
 
-// 📝 INSCRIPTION
+
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validation simple
+    // On vérifie que l'utilisateur a rempli les champs
     if (!username || !email || !password) {
       return res.status(400).json({ 
         success: false, 
         message: 'Tous les champs sont requis' 
       });
     }
-
+    // On vérifie que le mot de passe correspond aux règles qu'on a établi
+    // TODO : 'Mettre les règle de l'anssi'
     if (password.length < 6) {
       return res.status(400).json({ 
         success: false, 
@@ -28,8 +29,8 @@ router.post('/register', async (req, res) => {
     }
 
     // Vérifier si email existe déjà
-    const existingUser = await USERS.find_By_Email(email);
-    if (existingUser) {
+    const existing_User = await USERS.find_By_Email(email);
+    if (existing_User) {
       return res.status(400).json({ 
         success: false, 
         message: 'Email déjà utilisé' 
@@ -37,25 +38,25 @@ router.post('/register', async (req, res) => {
     }
 
     // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashed_Password = await bcrypt.hash(password, 10);
 
     // Créer l'utilisateur
-    const [userId] = await DATA_BASE('users').insert({
+    const [user_Id] = await DATA_BASE('users').insert({
       username,
       email,
-      password: hashedPassword,
+      password: hashed_Password,
       created_at: new Date()
     });
 
     // Générer token
-    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: user_Id, email }, JWT_SECRET, { expiresIn: '24h' });
 
     res.status(201).json({
       success: true,
       message: 'Compte créé avec succès',
       token,
       user: { 
-        id: userId, 
+        id: user_Id, 
         username, 
         email 
       }
