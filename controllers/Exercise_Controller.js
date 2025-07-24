@@ -1,82 +1,78 @@
 // controllers/exerciseController.js
-const Exercise_Service = require('../services/Workout/Exercise');
+const ExerciseService = require('../services/Workout/Exercise');
 
-class Exercise_Controller {
-    static async create(req, res) {
-        try {
-            const result = await Exercise_Service.createExercise(req.body);
-            res.status(201).json(result);
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+class ExerciseController {
+  // GET /api/exercises/public  (route publique)
+  static async getAllPublic(req, res, next) {
+    try {
+      const result = await ExerciseService.getAllExercises();
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
     }
+  }
 
-    static async getById(req, res) {
-        try {
-            const result = await Exercise_Service.getExerciseById(req.params.id);
-            res.json(result);
-        } catch (error) {
-            res.status(404).json({
-                success: false,
-                message: error.message
-            });
-        }
+  // GET /api/exercises          (route protégée)
+  static async getAll(req, res, next) {
+    try {
+      const result = await ExerciseService.getAllExercises();
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
     }
+  }
 
-    static async getAll(req, res) {
-        try {
-            const filters = {
-                sport_id: req.query.sport_id,
-                search: req.query.search
-            };
-            const result = await Exercise_Service.getAllExercises(filters);
-            res.json(result);
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+  // POST /api/exercises
+  static async create(req, res, next) {
+    console.log('Exercise create method reached!', req.body); 
+    try {
+      const result = await ExerciseService.createExercise(req.body);
+      return res.status(201).json(result);
+    } catch (err) {
+      console.error('Error creating exercise:', err);
+      return res.status(400).json({ success: false, message: err.message });
     }
+  }
 
-    static async update(req, res) {
-        try {
-            const result = await Exercise_Service.updateExercise(req.params.id, req.body);
-            res.json(result);
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+  // GET /api/exercises/:id
+  static async getById(req, res, next) {
+    try {
+      const result = await ExerciseService.getExerciseById(req.params.id);
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(404).json({ success: false, message: err.message });
     }
+  }
 
-    static async delete(req, res) {
-        try {
-            const result = await Exercise_Service.deleteExercise(req.params.id);
-            res.json(result);
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+  // PUT /api/exercises/:id
+  static async update(req, res, next) {
+    try {
+      const result = await ExerciseService.updateExercise(req.params.id, req.body);
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
     }
+  }
 
-    static async getBySport(req, res) {
-        try {
-            const result = await Exercise_Service.getExercisesBySport(req.params.sportId);
-            res.json(result);
-        } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: error.message
-            });
-        }
+  // DELETE /api/exercises/:id
+  static async delete(req, res, next) {
+    try {
+      const result = await ExerciseService.deleteExercise(req.params.id);
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
     }
+  }
+
+  // GET /api/sports/:sportId/exercises
+  static async getBySport(req, res, next) {
+    try {
+      const result = await ExerciseService.getExercisesBySport(req.params.sportId);
+      return res.status(200).json(result);
+    } catch (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+  }
 }
 
-module.exports = Exercise_Controller;
+module.exports = ExerciseController;

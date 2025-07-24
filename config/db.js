@@ -1,27 +1,28 @@
+// config/db.js - VERSION CORRIGÉE
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-async function connectDB() {
-  try {
-    const pool = mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'authdb',
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
-    });
+const {
+  DB_HOST = 'localhost',
+  DB_USER = 'root',
+  DB_PASSWORD = '',
+  DB_NAME = 'projet_annuel',  // ← CHANGÉ: utilisez projet_annuel par défaut
+  DB_PORT = 3306
+} = process.env;
 
-    const connection = await pool.getConnection();
-    console.log('🟢 Connexion réussie à la base de données !');
-    connection.release();
+// Create and export a connection pool synchronously
+const pool = mysql.createPool({
+  host: DB_HOST,
+  port: DB_PORT,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-    return pool;
-  } catch (err) {
-    console.error('🔴 Erreur de connexion à la base de données :', err);
-    process.exit(1);
-  }
-}
+// Debug: afficher la base utilisée
+console.log(`📊 Connexion à la base de données: ${DB_NAME}`);
 
-module.exports = connectDB;
+module.exports = pool;

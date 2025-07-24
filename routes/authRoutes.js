@@ -1,12 +1,12 @@
+// routes/authRoutes.js
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
 const { loginUser, registerUser } = require('../controllers/authControllers');
 
-router.post('/login', loginUser);
+// Inscription
 router.post('/register', registerUser);
-router.get('/ping', (req, res) => {
-  res.send('API Auth opérationnelle');
-});
 
+// Connexion
+router.post('/login',    loginUser);
 
 module.exports = router;

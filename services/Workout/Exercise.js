@@ -1,100 +1,107 @@
+// services/Workout/Exercise.js
+const db = require('../../config/db'); // mysql2/promise pool
 
-const Exercise = require('../../model/Exercice_Model');
+class ExerciseService {
+  // Récupère tous les exercices
+  static async getAllExercises() {
+    const [rows] = await db.execute(
+      `SELECT id,
+              sport_id   AS sportId,
+              name,
+              description,
+              default_unit AS defaultUnit,
+              created_at AS createdAt
+       FROM exercises`,
+      []
+    );
+    return { success: true, data: rows, count: rows.length };
+  }
 
-class Exercise_Service {
-    static async Create_Exercice(exerciseData) {
-        try {
-            
-            if (!exerciseData.name || !exerciseData.sport_id) {
-                throw new Error('Name and sport_id are required');
-            }
-
-            const result = await Exercise.create(exerciseData);
-            return {
-                success: true,
-                data: { id: result.insertId, ...exerciseData }
-            };
-        } catch (error) {
-            throw error;
-        }
+  // Crée un nouvel exercice
+  static async createExercise(data) {
+    if (!data.name || !data.sportId) {
+      throw new Error('name et sportId sont requis');
     }
+    const [result] = await db.execute(
+      `INSERT INTO exercises (sport_id, name, description, default_unit, created_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [data.sportId, data.name, data.description || null, data.defaultUnit || null]
+    );
+    return {
+      success: true,
+      data: {
+        id: result.insertId,
+        sportId: data.sportId,
+        name: data.name,
+        description: data.description || null,
+        defaultUnit: data.defaultUnit || null,
+        createdAt: new Date().toISOString()
+      }
+    };
+  }
 
-    static async Get_Exercise_By_Id(id) {
-        try {
-            const exercise = await Exercise.findById(id);
-            if (!exercise) {
-                throw new Error('Exercise not found');
-            }
-            return {
-                success: true,
-                data: exercise
-            };
-        } catch (error) {
-            throw error;
-        }
+  // Récupère un exercice par ID
+  static async getExerciseById(id) {
+    const [rows] = await db.execute(
+      `SELECT id,
+              sport_id   AS sportId,
+              name,
+              description,
+              default_unit AS defaultUnit,
+              created_at AS createdAt
+       FROM exercises WHERE id = ?`,
+      [id]
+    );
+    if (rows.length === 0) throw new Error('Exercise not found');
+    return { success: true, data: rows[0] };
+  }
+
+  // Met à jour un exercice
+  static async updateExercise(id, data) {
+    // Vérifie existence
+    const [exists] = await db.execute(`SELECT id FROM exercises WHERE id = ?`, [id]);
+    if (exists.length === 0) throw new Error('Exercise not found');
+
+    const fields = [];
+    const params = [];
+    if (data.sportId)    { fields.push('sport_id = ?');    params.push(data.sportId); }
+    if (data.name)       { fields.push('name = ?');        params.push(data.name); }
+    if (data.description !== undefined) {
+      fields.push('description = ?'); params.push(data.description);
     }
-
-    static async get_All_Exercises(filters = {}) {
-        try {
-            const exercises = await Exercise.findAll(filters);
-            return {
-                success: true,
-                data: exercises,
-                count: exercises.length
-            };
-        } catch (error) {
-            throw error;
-        }
+    if (data.defaultUnit !== undefined) {
+      fields.push('default_unit = ?'); params.push(data.defaultUnit);
     }
+    if (fields.length === 0) throw new Error('Aucun champ à mettre à jour');
 
-    static async update_Exercise(id, exerciseData) {
-        try {
-            // Check if exercise exists
-            const existing = await Exercise.findById(id);
-            if (!existing) {
-                throw new Error('Exercise not found');
-            }
+    params.push(id);
+    const sql = `UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`;
+    await db.execute(sql, params);
+    return { success: true, message: 'Exercise updated successfully' };
+  }
 
-            const result = await Exercise.update(id, exerciseData);
-            return {
-                success: true,
-                message: 'Exercise updated successfully'
-            };
-        } catch (error) {
-            throw error;
-        }
-    }
+  // Supprime un exercice
+  static async deleteExercise(id) {
+    const [exists] = await db.execute(`SELECT id FROM exercises WHERE id = ?`, [id]);
+    if (exists.length === 0) throw new Error('Exercise not found');
+    await db.execute(`DELETE FROM exercises WHERE id = ?`, [id]);
+    return { success: true, message: 'Exercise deleted successfully' };
+  }
 
-    static async delete_Exercise(id) {
-        try {
-            // Check if exercise exists
-            const existing = await Exercise.findById(id);
-            if (!existing) {
-                throw new Error('Exercise not found');
-            }
-
-            await Exercise.delete(id);
-            return {
-                success: true,
-                message: 'Exercise deleted successfully'
-            };
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    static async get_Exercises_By_Sport(sportId) {
-        try {
-            const exercises = await Exercise.findBySportId(sportId);
-            return {
-                success: true,
-                data: exercises,
-                count: exercises.length
-            };
-        } catch (error) {
-            throw error;
-        }
-    }
+  // Récupère les exercices d’un sport
+  static async getExercisesBySport(sportId) {
+    const [rows] = await db.execute(
+      `SELECT id,
+              sport_id   AS sportId,
+              name,
+              description,
+              default_unit AS defaultUnit,
+              created_at AS createdAt
+       FROM exercises WHERE sport_id = ?`,
+      [sportId]
+    );
+    return { success: true, data: rows, count: rows.length };
+  }
 }
 
-module.exports = Exercise_Service;
+module.exports = ExerciseService;

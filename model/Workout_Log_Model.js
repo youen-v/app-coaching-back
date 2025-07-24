@@ -2,6 +2,20 @@
 const db = require('../config/db');
 
 class Workout {
+
+    static async findByUserId(userId, limit = 50, offset = 0) {
+        const query = `
+            SELECT wl.*, w.name as workout_name, p.name as program_name
+            FROM workout_logs wl
+            JOIN workouts w ON wl.workout_id = w.id
+            JOIN programs p ON w.program_id = p.id
+            WHERE p.user_id = ?
+            ORDER BY wl.performed_at DESC
+            LIMIT ? OFFSET ?
+        `;
+        const [rows] = await db.execute(query, [userId, limit, offset]);
+        return rows;
+    }
     static async create(workoutData) {
         const { program_id, sport_id, name, scheduled_on, position } = workoutData;
         const query = `

@@ -1,7 +1,9 @@
 // models/workoutModel.js
 const db = require('../config/db');
 
-class Workout {
+class Workout_Model {
+
+    
     static async create(workoutData) {
         const { program_id, sport_id, name, scheduled_on, position } = workoutData;
         const query = `
@@ -96,4 +98,4 @@ class Workout {
     }
 }
 
-module.exports = Workout;
+module.exports = Workout_Model;
