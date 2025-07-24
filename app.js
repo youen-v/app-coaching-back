@@ -7,6 +7,7 @@ const programRoutes     = require('./routes/Program_Routes');
 const workoutRoutes     = require('./routes/Workout_Routes');
 const workoutLogRoutes  = require('./routes/Workout_Log_Routes');
 const errorHandler      = require('./middlewares/errorHandler');
+const { authenticate } = require("./middlewares/auth");
 
 const app = express();
 

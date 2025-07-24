@@ -7,11 +7,11 @@ const { authenticate } = require('../middlewares/auth');
 router.get('/exercises/public', Exercise_Controller.getAll);
 
 // Routes protégées AVEC authentification spécifique
-router.post('/exercises', authenticate, Exercise_Controller.create);
-router.get('/exercises', authenticate, Exercise_Controller.getAll);
-router.get('/exercises/:id', authenticate, Exercise_Controller.getById);
-router.put('/exercises/:id', authenticate, Exercise_Controller.update);
-router.delete('/exercises/:id', authenticate, Exercise_Controller.delete);
+router.post('/', authenticate, Exercise_Controller.create);
+router.get('/', authenticate, Exercise_Controller.getAll);
+router.get('/:id', authenticate, Exercise_Controller.getById);
+router.put('/:id', authenticate, Exercise_Controller.update);
+router.delete('/:id', authenticate, Exercise_Controller.delete);
 
 router.get('/sports/:sportId/exercises', authenticate, Exercise_Controller.getBySport);
 

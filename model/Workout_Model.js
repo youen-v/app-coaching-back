@@ -53,15 +53,40 @@ class Workout_Model {
     }
 
     static async update(id, workoutData) {
-        const { program_id, sport_id, name, scheduled_on, position } = workoutData;
-        const query = `
-            UPDATE workouts 
-            SET program_id = ?, sport_id = ?, name = ?, scheduled_on = ?, position = ?
-            WHERE id = ?
-        `;
-        const [result] = await db.execute(query, [program_id, sport_id, name, scheduled_on, position, id]);
-        return result;
+    const fields = [];
+    const params = [];
+    
+    if (workoutData.program_id !== undefined) {
+        fields.push('program_id = ?');
+        params.push(workoutData.program_id);
     }
+    if (workoutData.sport_id !== undefined) {
+        fields.push('sport_id = ?');
+        params.push(workoutData.sport_id);
+    }
+    if (workoutData.name !== undefined) {
+        fields.push('name = ?');
+        params.push(workoutData.name);
+    }
+    if (workoutData.scheduled_on !== undefined) {
+        fields.push('scheduled_on = ?');
+        params.push(workoutData.scheduled_on);
+    }
+    if (workoutData.position !== undefined) {
+        fields.push('position = ?');
+        params.push(workoutData.position);
+    }
+    
+    if (fields.length === 0) {
+        throw new Error('No fields to update');
+    }
+    
+    params.push(id);
+    const query = `UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`;
+    
+    const [result] = await db.execute(query, params);
+    return result;
+}
 
     static async delete(id) {
         const query = 'DELETE FROM workouts WHERE id = ?';

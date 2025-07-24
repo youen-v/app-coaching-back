@@ -50,11 +50,24 @@ class Program_Service {
         return result;
     }
 
-    static async delete(id) {
-        const query = 'DELETE FROM programs WHERE id = ?';
-        const [result] = await db.execute(query, [id]);
+   static async delete(id) {
+    try {
+        // 1. Supprimer d'abord tous les workouts associés
+        const deleteWorkoutsQuery = 'DELETE FROM workouts WHERE program_id = ?';
+        await db.execute(deleteWorkoutsQuery, [id]);
+        console.log('Associated workouts deleted');
+
+        // 2. Supprimer le programme
+        const deleteProgramQuery = 'DELETE FROM programs WHERE id = ?';
+        const [result] = await db.execute(deleteProgramQuery, [id]);
+        console.log('Program deleted');
+
         return result;
+    } catch (error) {
+        console.log('Delete error:', error.message);
+        throw error;
     }
+}
 
     static async get_Active_Programs(userId) {
         const query = `

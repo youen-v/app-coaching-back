@@ -2,37 +2,91 @@ const WorkoutLog = require('../../Model/Workout_Log_Model');
 const db = require('../../config/db');
 
 class WorkoutLogService {
-    static async log_Workout(logData) {
-        try {
-            console.log('🔍 log_Workout called with:', JSON.stringify(logData, null, 2));
-            
-            // Validate required fields
-            if (!logData.user_id || !logData.workout_id) {
-                throw new Error('user_id and workout_id are required');
-            }
-
-            if (!logData.exercises || logData.exercises.length === 0) {
-                throw new Error('At least one exercise must be logged');
-            }
-
-            // ✅ AJOUTÉ: Mock temporaire pour result
-            const result = {
-                id: Math.floor(Math.random() * 1000),
-                user_id: logData.user_id,
-                workout_id: logData.workout_id,
-                created_at: new Date().toISOString()
-            };
-
-            return {
-                success: true,
-                data: result,
-                message: 'Workout logged successfully'
-            };
-        } catch (error) {
-            console.log('❌ Error in log_Workout:', error.message);
-            throw error;
+   static async log_Workout(logData) {
+    try {
+        console.log('🔍 log_Workout called with:', JSON.stringify(logData, null, 2));
+        
+        // Validate required fields
+        if (!logData.user_id || !logData.workout_id) {
+            throw new Error('user_id and workout_id are required');
         }
+
+        if (!logData.exercises || logData.exercises.length === 0) {
+            throw new Error('At least one exercise must be logged');
+        }
+
+        // ✅ VRAIE création dans la DB
+        // 1. Créer le workout log principal
+        const workoutLogQuery = `
+            INSERT INTO workout_logs (user_id, workout_id, performed_at, comment)
+            VALUES (?, ?, ?, ?)
+        `;
+        
+        const [workoutLogResult] = await db.execute(workoutLogQuery, [
+            logData.user_id,
+            logData.workout_id,
+            logData.performed_at || new Date(),
+            logData.notes || logData.comment || null
+        ]);
+        
+        const workoutLogId = workoutLogResult.insertId;
+        console.log('✅ Workout log created with ID:', workoutLogId);
+
+        // 2. Créer les exercices et leurs sets
+        for (let i = 0; i < logData.exercises.length; i++) {
+            const exercise = logData.exercises[i];
+            
+            // Créer l'exercice
+            const exerciseQuery = `
+                INSERT INTO log_exercises (workout_log_id, exercise_id, position)
+                VALUES (?, ?, ?)
+            `;
+            
+            const [exerciseResult] = await db.execute(exerciseQuery, [
+                workoutLogId,
+                exercise.exercise_id,
+                i + 1
+            ]);
+            
+            const logExerciseId = exerciseResult.insertId;
+            
+            // Créer les sets
+            if (exercise.sets && exercise.sets.length > 0) {
+                for (const set of exercise.sets) {
+                    const setQuery = `
+                        INSERT INTO log_sets (log_exercise_id, set_index, reps, weight, rest_sec)
+                        VALUES (?, ?, ?, ?, ?)
+                    `;
+                    
+                    await db.execute(setQuery, [
+                        logExerciseId,
+                        set.set_index || 1,
+                        set.reps,
+                        set.weight,
+                        set.rest_seconds || set.rest_sec || null
+                    ]);
+                }
+            }
+        }
+
+  
+        const result = {
+            id: workoutLogId,
+            user_id: logData.user_id,
+            workout_id: logData.workout_id,
+            created_at: new Date().toISOString()
+        };
+
+        return {
+            success: true,
+            data: result,
+            message: 'Workout logged successfully'
+        };
+    } catch (error) {
+        console.log('❌ Error in log_Workout:', error.message);
+        throw error;
     }
+}
 
     static async get_Workout_Log(logId) {
         try {
@@ -186,22 +240,39 @@ class WorkoutLogService {
     }
 }
 
-    static async delete_Workout_Log(logId) {
-        try {
-            const existing = await WorkoutLog.findById(logId);
-            if (!existing) {
-                throw new Error('Workout log not found');
-            }
-
-            await WorkoutLog.delete(logId);
-            return {
-                success: true,
-                message: 'Workout log deleted successfully'
-            };
-        } catch (error) {
-            throw error;
+static async delete_Workout_Log(logId) {
+    try {
+        const existing = await WorkoutLog.findById(logId);
+        if (!existing) {
+            throw new Error('Workout log not found');
         }
+        const deleteSetsQuery = `
+            DELETE ls FROM log_sets ls
+            JOIN log_exercises le ON ls.log_exercise_id = le.id
+            WHERE le.workout_log_id = ?
+        `;
+        await db.execute(deleteSetsQuery, [logId]);
+        console.log('Log sets deleted');
+
+      
+        const deleteExercisesQuery = `DELETE FROM log_exercises WHERE workout_log_id = ?`;
+        await db.execute(deleteExercisesQuery, [logId]);
+        console.log('Log exercises deleted');
+
+       
+        const deleteLogQuery = `DELETE FROM workout_logs WHERE id = ?`;
+        await db.execute(deleteLogQuery, [logId]);
+        console.log('Workout log deleted');
+
+        return {
+            success: true,
+            message: 'Workout log deleted successfully'
+        };
+    } catch (error) {
+        console.log('Delete error:', error.message);
+        throw error;
     }
+}
 
     static calculate_Progress(history) {
         if (!history || history.length === 0) {
