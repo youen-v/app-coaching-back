@@ -22,7 +22,7 @@ class Workout_Log_Controller {
 
     static async getById(req, res) {
         try {
-            const result = await Workout_Log_Service.getWorkoutLog(req.params.id);
+            const result = await Workout_Log_Service.get_Workout_Log(req.params.id);
             res.json(result);
         } catch (error) {
             res.status(404).json({
@@ -81,7 +81,7 @@ class Workout_Log_Controller {
 
     static async delete(req, res) {
         try {
-            const result = await Workout_Log_Service.deleteWorkoutLog(req.params.id);
+            const result = await Workout_Log_Service.delete_Workout_Log(req.params.id);
             res.json(result);
         } catch (error) {
             res.status(400).json({

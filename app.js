@@ -14,11 +14,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api',             authRoutes);        
-app.use('/api',             exerciseRoutes);
-app.use('/api',             programRoutes);        
-app.use('/api',             workoutRoutes);       
-app.use('/api',             workoutLogRoutes);     
+app.use("/api/auth", authRoutes);
+app.use("/api/exercises", authenticate, exerciseRoutes);
+app.use("/api/programs", authenticate, programRoutes);
+app.use("/api/workouts", authenticate, workoutRoutes);
+app.use("/api/workout-logs", authenticate, workoutLogRoutes);
 
 app.use(errorHandler);
 

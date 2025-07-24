@@ -6,7 +6,7 @@ const {
   DB_HOST = 'localhost',
   DB_USER = 'root',
   DB_PASSWORD = '',
-  DB_NAME = 'projet_annuel',  // ← CHANGÉ: utilisez projet_annuel par défaut
+  DB_NAME = 'projet_annuel',  
   DB_PORT = 3306
 } = process.env;
 
